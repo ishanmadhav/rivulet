@@ -10,7 +10,7 @@ It supports high throughput via its distributed architecture, and persistence vi
 
 You will need Minio and DragonFlyDB setup on your system (in local or as Docker containers or K8s pods) to be able to use this. 
 
-Once the DragonFlyDB and Minio have been setup and are running, just run `docker compose up` from the root of the directory to start a distributed messaging queue with 2 agents and 1 service. You can use any of the clients to produce or consume messages. Currently, the Go client is the more complete implementation.
+Once the DragonFlyDB and Minio have been setup and are running, just run `docker compose up` from the root of the directory to start a distributed messaging queue with 2 agents and 1 service. Agents are independent of each other and can be added as per the desired load. You can use any of the clients to produce or consume messages. Currently, the Go client is the more complete implementation.
 
 ## Setup Instructions
 
@@ -39,4 +39,10 @@ You can also use Redis instead of DragonFlyDB as it's compatible.
 
 ```bash
 docker run --network=host --ulimit memlock=-1 docker.dragonflydb.io/dragonflydb/dragonfly
+```
+
+### Running the distribtued messaing queue
+Run the following in any termianl:
+```bash
+docker compose up
 ```
