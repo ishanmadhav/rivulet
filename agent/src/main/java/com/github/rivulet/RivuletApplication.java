@@ -9,7 +9,10 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 public class RivuletApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(RivuletApplication.class, args);
+
+		SpringApplication.run(RivuletApplication.class, args)
+
+		;
 	}
 
 }

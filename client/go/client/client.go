@@ -1,6 +1,7 @@
 package client
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/go-resty/resty/v2"
@@ -9,16 +10,35 @@ import (
 type Client struct {
 	cli        *resty.Client
 	clusterUrl string
+	agentUrl   string
+	agentId    string
 }
 
-func NewClient(clusterUrl string) *Client {
-	httpCli := resty.New()
+type Agent struct {
+	NodeUrl  string `json:"nodeurl"`
+	NodePort string `json:"nodeport"`
+	Id       string `json:"id"`
+}
 
+func NewClient(clusterUrl string) (*Client, error) {
+	httpCli := resty.New()
+	respAgent := Agent{}
+	_, err := httpCli.R().SetHeader("Content-Type", "application/json").SetResult(&respAgent).Get(clusterUrl + "/lookup")
+	if err != nil {
+		return nil, err
+	}
+	// Check if the respAgent contains valid data by checking key fields
+	if respAgent.Id == "" && respAgent.NodeUrl == "" {
+		return nil, errors.New("Null agent found")
+	}
 	newCli := Client{
 		cli:        httpCli,
 		clusterUrl: clusterUrl,
+		agentUrl:   "http://" + respAgent.NodeUrl + ":" + respAgent.NodePort,
+		agentId:    respAgent.Id,
 	}
-	return &newCli
+
+	return &newCli, nil
 }
 
 // ConsumeMessage calls the API to consume a message from a specific topic, partition, and offset
@@ -31,7 +51,7 @@ func (c *Client) ConsumeMessage(topic, partition string, offset int) (interface{
 		}).
 		SetHeader("Content-Type", "application/json").
 		SetResult(map[string]interface{}{}).
-		Get(c.clusterUrl + "/api/consume")
+		Get(c.agentUrl + "/api/consume")
 
 	if err != nil {
 		return nil, err
@@ -59,7 +79,7 @@ func (c *Client) ProduceMessage(topic, partition, key, value string) (interface{
 		SetHeader("Content-Type", "application/json").
 		SetBody(reqBody).
 		SetResult(map[string]interface{}{}).
-		Post(c.clusterUrl + "/api/produce")
+		Post(c.agentUrl + "/api/produce")
 
 	if err != nil {
 		return nil, err
@@ -70,24 +90,4 @@ func (c *Client) ProduceMessage(topic, partition, key, value string) (interface{
 	}
 
 	return resp.Result(), nil
-}
-
-func ExampleUsage() {
-	client := NewClient("http://localhost:8080")
-
-	// Consume message example
-	consumeResult, err := client.ConsumeMessage("demotopicx", "demopartx", 2)
-	if err != nil {
-		fmt.Printf("Consume Error: %v\n", err)
-	} else {
-		fmt.Printf("Consume Response: %v\n", consumeResult)
-	}
-
-	// Produce message example
-	produceResult, err := client.ProduceMessage("demotopicx", "demopartx", "key2", "val2")
-	if err != nil {
-		fmt.Printf("Produce Error: %v\n", err)
-	} else {
-		fmt.Printf("Produce Response: %v\n", produceResult)
-	}
 }

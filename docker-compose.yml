@@ -1,0 +1,30 @@
+version: '3.8'  # Specify the Docker Compose version
+
+services:
+  rivulet-agent-1:
+    build:
+      context: agent                   # Directory containing the Dockerfile
+    container_name: rivulet-agent-1  # Name of the container
+    ports:
+      - "8081:8081"                # Maps host port 8081 to container port 8081
+    environment:
+      - PORT=8081                  # Set environment variable PORT
+    network_mode: host             # Use host network mode
+
+  rivulet-agent-2:
+    build:
+      context: agent                   # Directory containing the Dockerfile
+    container_name: rivulet-agent-2  # Name of the container
+    ports:
+      - "8082:8082"                # Maps host port 8081 to container port 8081
+    environment:
+      - PORT=8082                  # Set environment variable PORT
+    network_mode: host             # Use host network mode
+
+  rivulet-service:
+    build:
+      context: service                   # Directory containing the Dockerfile
+    container_name: rivulet-service  # Name of the container
+    ports:
+      - "3000:3000"                # Maps host port 8081 to container port 8081
+    network_mode: host             # Use host network mode
